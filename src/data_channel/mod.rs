@@ -28,7 +28,7 @@ pub struct Config {
     #[builder(default)]
     pub priority: u16,
     #[builder(default)]
-    pub reliability_parameter: u32,
+    pub reliability_parameter: Option<u16>,
     #[builder(default)]
     pub label: String,
     #[builder(default)]

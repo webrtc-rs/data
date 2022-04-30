@@ -146,7 +146,7 @@ const CHANNEL_OPEN_HEADER_LEN: usize = 11;
 pub struct DataChannelOpen {
     pub channel_type: ChannelType,
     pub priority: u16,
-    pub reliability_parameter: u32,
+    pub reliability_parameter: Option<u16>,
     pub label: Vec<u8>,
     pub protocol: Vec<u8>,
 }
@@ -174,7 +174,16 @@ impl Marshal for DataChannelOpen {
         let n = self.channel_type.marshal_to(buf)?;
         buf = &mut buf[n..];
         buf.put_u16(self.priority);
-        buf.put_u32(self.reliability_parameter);
+
+        let has_reliability_param: u8 = match self.reliability_parameter.is_some() {
+            false => 0,
+            true => 1,
+        };
+        buf.put_u8(has_reliability_param);
+        if let Some(value) = &self.reliability_parameter {
+            buf.put_u16(*value);
+        }
+
         buf.put_u16(self.label.len() as u16);
         buf.put_u16(self.protocol.len() as u16);
         buf.put_slice(self.label.as_slice());
@@ -199,7 +208,12 @@ impl Unmarshal for DataChannelOpen {
 
         let channel_type = ChannelType::unmarshal(buf)?;
         let priority = buf.get_u16();
-        let reliability_parameter = buf.get_u32();
+
+        let reliability_parameter = match buf.get_u8() {
+            1 => Some(buf.get_u16()),
+            _ => None,
+        };
+
         let label_len = buf.get_u16() as usize;
         let protocol_len = buf.get_u16() as usize;
 
