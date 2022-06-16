@@ -434,6 +434,14 @@ impl AsyncWrite for PollDataChannel {
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         Pin::new(&mut self.poll_stream).poll_shutdown(cx)
     }
+
+    fn poll_write_vectored(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        bufs: &[io::IoSlice<'_>],
+    ) -> Poll<io::Result<usize>> {
+        Pin::new(&mut self.poll_stream).poll_write_vectored(cx, bufs)
+    }
 }
 
 impl Clone for PollDataChannel {
