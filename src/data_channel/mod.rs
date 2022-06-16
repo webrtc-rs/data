@@ -406,6 +406,11 @@ impl PollDataChannel {
     pub fn buffered_amount_low_threshold(&self) -> usize {
         self.poll_stream.buffered_amount_low_threshold()
     }
+
+    /// Set the capacity of the temporary read buffer (default: 8192).
+    pub fn set_read_buf_capacity(&mut self, capacity: usize) {
+        self.poll_stream.set_read_buf_capacity(capacity)
+    }
 }
 
 impl AsyncRead for PollDataChannel {
