@@ -160,6 +160,7 @@ impl DataChannel {
                 }
                 Ok((n, ppi)) => (n, ppi),
                 Err(err) => {
+                    // Shutdown the stream and send the reset request to the remote.
                     self.close().await?;
                     return Err(err.into());
                 }
@@ -274,8 +275,9 @@ impl DataChannel {
                 .await?;
             0
         } else {
-            self.bytes_sent.fetch_add(data_len, Ordering::SeqCst);
-            self.stream.write_sctp(data, ppi).await?
+            let n = self.stream.write_sctp(data, ppi).await?;
+            self.bytes_sent.fetch_add(n, Ordering::SeqCst);
+            n
         };
 
         self.messages_sent.fetch_add(1, Ordering::SeqCst);
