@@ -267,18 +267,19 @@ impl DataChannel {
             (true, _) => PayloadProtocolIdentifier::String,
         };
 
-        self.messages_sent.fetch_add(1, Ordering::SeqCst);
-        self.bytes_sent.fetch_add(data_len, Ordering::SeqCst);
-
-        if data_len == 0 {
+        let n = if data_len == 0 {
             let _ = self
                 .stream
                 .write_sctp(&Bytes::from_static(&[0]), ppi)
                 .await?;
-            Ok(0)
+            0
         } else {
-            Ok(self.stream.write_sctp(data, ppi).await?)
-        }
+            self.bytes_sent.fetch_add(data_len, Ordering::SeqCst);
+            self.stream.write_sctp(data, ppi).await?
+        };
+
+        self.messages_sent.fetch_add(1, Ordering::SeqCst);
+        Ok(n)
     }
 
     async fn write_data_channel_ack(&self) -> Result<usize> {
