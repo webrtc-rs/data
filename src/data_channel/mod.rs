@@ -14,6 +14,7 @@ use util::marshal::*;
 
 use bytes::{Buf, Bytes};
 use derive_builder::Builder;
+use std::borrow::Borrow;
 use std::fmt;
 use std::future::Future;
 use std::io;
@@ -78,22 +79,25 @@ impl DataChannel {
     }
 
     /// Accept is used to accept incoming data channels over SCTP
-    pub async fn accept(
+    pub async fn accept<T>(
         association: &Arc<Association>,
         config: Config,
-        existing_channels: &[Arc<DataChannel>],
-    ) -> Result<Self> {
+        existing_channels: &[T],
+    ) -> Result<Self>
+    where
+        T: Borrow<Self>,
+    {
         let stream = association
             .accept_stream()
             .await
             .ok_or(Error::ErrStreamClosed)?;
 
-        for channel in existing_channels.iter() {
+        for channel in existing_channels.iter().map(|ch| ch.borrow()) {
             if channel.stream_identifier() == stream.stream_identifier() {
-                channel
-                    .stream
+                let ch = channel.to_owned();
+                ch.stream
                     .set_default_payload_type(PayloadProtocolIdentifier::Binary);
-                return Ok(channel.as_ref().to_owned());
+                return Ok(ch);
             }
         }
 
