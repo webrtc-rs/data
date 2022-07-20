@@ -81,7 +81,7 @@ impl DataChannel {
     pub async fn accept(
         association: &Arc<Association>,
         config: Config,
-        existing_channels: Vec<DataChannel>,
+        existing_channels: &[DataChannel],
     ) -> Result<Self> {
         let stream = association
             .accept_stream()
@@ -661,6 +661,6 @@ impl fmt::Debug for PollDataChannel {
 
 impl AsRef<DataChannel> for PollDataChannel {
     fn as_ref(&self) -> &DataChannel {
-        &*self.data_channel
+        &self.data_channel
     }
 }
