@@ -81,7 +81,7 @@ impl DataChannel {
     pub async fn accept(
         association: &Arc<Association>,
         config: Config,
-        existing_channels: &[DataChannel],
+        existing_channels: &[Arc<DataChannel>],
     ) -> Result<Self> {
         let stream = association
             .accept_stream()
@@ -93,7 +93,7 @@ impl DataChannel {
                 channel
                     .stream
                     .set_default_payload_type(PayloadProtocolIdentifier::Binary);
-                return Ok(channel.to_owned());
+                return Ok(channel.as_ref().to_owned());
             }
         }
 
